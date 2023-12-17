@@ -16,37 +16,39 @@ export function App() {
   const [isModal, setIsModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState('');
 
-  useEffect(() => {}, [query, currentPage]);
-
-  const fetchImages = async (query, page) => {
-    setIsLoading(true);
-    try {
-      const data = await getData(query, page);
-      return data;
-    } catch (error) {
-      console.log(error.message);
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (query !== '') {
+      async function fetchImages() {
+        try {
+          setIsLoading(true);
+          const data = await getData(query, currentPage);
+          setImages(prevImages => [...prevImages, ...data.hits]);
+          setTotalHits(data.total);
+        } catch (error) {
+          console.log(error.message);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+      fetchImages();
     }
-  };
+  }, [query, currentPage]);
 
-  const handleSubmit = async evt => {
+  const handleSubmit = evt => {
     evt.preventDefault();
 
     const form = evt.target;
     const query = form.elements.input.value;
-    const data = await fetchImages(query, 1);
-    const images = data.hits;
 
-    setImages(images);
+    setImages([]);
     setQuery(query);
-    setTotalHits(data.total);
+    setTotalHits(0);
     setCurrentPage(1);
+
+    form.reset();
   };
 
-  const handleMore = async () => {
-    const nextImages = await fetchImages(query, currentPage + 1);
-    setImages([...images, ...nextImages.hits]);
+  const handleMore = () => {
     setCurrentPage(currentPage + 1);
   };
 
